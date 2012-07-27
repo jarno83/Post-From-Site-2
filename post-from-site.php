@@ -196,8 +196,66 @@ class PostFromSite2 {
 	}
 	
 	function get_form() {
-	    // print out form, so much simpler with wp_editor!
-	    // add chosen-enabled taxonomy boxes, note somewhere that you can disable chosen via code by removing from enqueue
+		//if ( no capability ) return;
+		
+		$options = $this->get_options();
+
+		$style = '<style>
+			input.title {
+				width:100%;
+				box-sizing:border-box;
+			}
+			select.chzn-select {
+				display:block;
+				width:100%;
+			}
+		</style>';
+		
+		
+		// nonce
+		$nonce = wp_nonce_field( 'create_post', '_pfs_create_nonce', true, false );
+		
+		// title
+		$title = '<input class="title" type="text" placeholder="Enter title here" />';
+	    
+	    // editor
+	    $editor_settings = array();
+	    $editor_settings = apply_filters('pfs_editor_settings', $editor_settings);
+	    ob_start();
+	    wp_editor('', 'post_content', $editor_settings);
+	    $editor = ob_get_contents();
+	    ob_clean();
+	    
+	    // chosen-enabled taxonomy boxes
+	    if ( apply_filters('pfs_use_chosen', true) )
+		    $chosen = '<script type="text/javascript"> jQuery(document).ready(function($){  $( ".chzn-select" ).chosen();  }); </script>';
+		else
+			$chosen = ''; 
+	    $taxonomies = '';
+	    foreach ( $options['pfs_taxonomies'] as $tax) {
+	    	$tax = get_taxonomy($tax); // grab the object, so we have labels etc.
+	    	var_export($tax);
+	    	$taxonomies .= sprintf(
+	    		'<select data-placeholder="%1$s" name="%2$s[]" id="%2$s" class="chzn-select widefat" multiple>',
+	    		$tax->label,
+	    		$tax->name
+	    	);
+	    	$terms = get_terms( $tax->name, 'hide_empty=0' );
+	    	foreach ( $terms as $term ) { 
+	    		$taxonomies .= sprintf( '<option value="%1$s">%2$s</option>', $term->slug, $term->name );
+	    	}
+	    	$taxonomies .= '</select>';	
+	    }
+	    
+		$form = '<form id="post-from-site">' .
+			$style .
+			$nonce .
+			$title .
+			$editor .
+			$chosen . 
+			$taxonomies .
+		'</form>';
+	    return $form;
 	}
 }
 $GLOBALS['pfs'] = new PostFromSite2();
