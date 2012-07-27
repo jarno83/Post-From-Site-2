@@ -22,6 +22,9 @@ class PostFromSite2 {
     	// TODO deal with translations.
     	load_plugin_textdomain('pfs_domain');
     	
+    	// add settings link to plugin action links
+    	add_filter( 'plugin_action_links_'.plugin_basename( __FILE__ ), array($this, 'add_plugin_action_links') );
+    	
     	// add js & css
     	add_action( 'get_header', array($this,'includes') );
     	
@@ -38,6 +41,13 @@ class PostFromSite2 {
     public function install(){
     	//nothing here yet, as there's really nothing to 'install' that isn't covered by __construct
     	// Can I error here if PFS 1 is currently active? They'll collide otherwise. (same shortcode)
+    }
+    
+    function add_plugin_action_links( $links ) {
+    	return array_merge(
+    		array( 'settings' => sprintf('<a href="%1$s">%2$s</a>', admin_url('options-writing.php#pfs'), __('Settings','pfs_domain') ) ),
+    		$links
+    	);
     }
     
     /**
