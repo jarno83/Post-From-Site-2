@@ -55,8 +55,13 @@ class PostFromSite2 {
 	 */
 	public function includes(){
 	    // chosen for taxonomy choosing
-	    wp_enqueue_script( 'pfs-script', plugins_url("includes/pfs-script.js",__FILE__) );
+	    wp_enqueue_script( 'chosen', 'https://raw.github.com/harvesthq/chosen/master/chosen/chosen.jquery.min.js', array('jquery') );
+	    wp_enqueue_script( 'pfs-script', plugins_url("includes/script.js",__FILE__), array('jquery') );
+	    //wp_enqueue_style( 'chosen',  'https://raw.github.com/harvesthq/chosen/master/chosen/chosen.css' );
 	    wp_enqueue_style( 'pfs-min-style',  plugins_url("includes/minimal.css",__FILE__) );
+	    
+	    //wp_enqueue_script( 'chosen', plugins_url("includes/chosen/chosen.jquery.min.js",__FILE__), array('jquery') );
+	    wp_enqueue_style( 'chosen',  plugins_url("includes/chosen/chosen.css",__FILE__) );
 	}
 
 	/**
