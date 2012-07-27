@@ -167,34 +167,50 @@ class PostFromSite2 {
 	 * Sanitize and validate input. 
 	 * @param array $input an array to sanitize
 	 * @return array a valid array.
+	 * TODO: 
 	 */
 	public function validate($input) {
+		$options = $this->get_options();
 	    $output = array();
-	    $valid_statuses = array( 'publish', 'private', 'pending', 'draft' );
+	    $valid_statuses = get_post_stati( array( 'show_in_admin_all_list'=>true ) );
+	    unset($valid_statuses['future']); // we don't have a way of setting scheduled posts, so don't allow it.
+	    $valid_statuses['perpost'] = 'perpost';
 	    $valid_types = get_post_types( array( 'public'=>true, 'show_ui'=>true ), 'names' );
-	    $valid_comment = array( 'open', 'closed', 'perpage' );
-
-	    // validate each option, filling out $output with correct vals.
-	    if ( isset( $input['pfs_status'] ) && in_array( $input['pfs_status'], $valid_statuses ) )
-	    	$output['pfs_status'] = $input['pfs_status']; 
+	    $valid_comment = array( 'open', 'closed', 'perpost' );
 	    
-	    if ( isset( $input['pfs_type'] ) && in_array( $input['pfs_type'], $valid_types ) )
+	    if ( isset( $input['pfs_type'] ) && in_array( $input['pfs_type'], $valid_types ) ) {
 	        $output['pfs_type'] = $input['pfs_type'];
-	    
-	    if ( isset( $input['pfs_comment'] ) && in_array( $input['pfs_comment'], $valid_comment ) )
-	        $output['pfs_comment'] = $input['pfs_comment'];
+	    }
+
+		// status is not affected by changing post type.
+	    if ( isset( $input['pfs_status'] ) && in_array( $input['pfs_status'], $valid_statuses ) ) {
+	    	$output['pfs_status'] = $input['pfs_status']; 
+	    }
+
+	    // grab the current post type, either just set & is in output, or grab from $options.
+	    $post_type = (isset($output['pfs_type']))? $output['pfs_type']: $options['pfs_type'];
+
+		// comments 
+	    if ( isset( $input['pfs_comments'] ) ){
+	    	if ( !post_type_supports( $post_type, 'comments' ) ){
+	    		add_settings_error('pfs_comments', 'pfs_comments', __('Comments are not supported on the chosen post type.', 'pfs_domain') );
+	    	} else if ( in_array( $input['pfs_comments'], $valid_comment ) ) {
+		        $output['pfs_comments'] = $input['pfs_comments'];
+		    }
+	    }
 	    
 	    if ( isset( $input['pfs_taxonomies'] ) ){
 	        $output['pfs_taxonomies'] = array();
-    	    $valid_taxonomies = get_taxonomies( array( 'public'=>true, 'show_ui'=>true, 'object_type'=>array($input['pfs_type']) ), 'names' );
-    	    //var_dump($valid_taxonomies);
+    	    $valid_taxonomies = get_taxonomies( array( 'public'=>true, 'show_ui'=>true, 'object_type'=>array($post_type) ), 'names' );
 	        foreach ( $input['pfs_taxonomies'] as $t ) {
 	            if ( in_array( $t, $valid_taxonomies ) )
         	        $output['pfs_taxonomies'][] = $t;
         	}
+        	$diff = array_diff($input['pfs_taxonomies'],$output['pfs_taxonomies']);
+        	if ( count($diff) ){
+	        	add_settings_error('pfs_taxonomies', 'pfs_taxonomies', sprintf( _n('The taxonomy %s is not supported on the chosen post type.', 'The taxonomies %s are not supported on the chosen post type.', count($diff), 'pfs_domain'), implode(', ', $diff) ) );
+	        }
         }
-        add_settings_error('pfs_taxonomies', 'pfs_taxonomies', print_r($input,true).print_r($output,true));
-        
         return $output;
 	}
 	
@@ -237,7 +253,7 @@ class PostFromSite2 {
 	    $taxonomies = '';
 	    foreach ( $options['pfs_taxonomies'] as $tax) {
 	    	$tax = get_taxonomy($tax); // grab the object, so we have labels etc.
-	    	var_export($tax);
+	    	//var_export($tax);
 	    	$taxonomies .= sprintf(
 	    		'<select data-placeholder="%1$s" name="%2$s[]" id="%2$s" class="chzn-select widefat" multiple>',
 	    		$tax->label,
@@ -250,6 +266,10 @@ class PostFromSite2 {
 	    	$taxonomies .= '</select>';	
 	    }
 	    
+	    // comment status, if set as perpost
+	    
+	    // publish status, if set as perpost
+	    
 		$form = '<form id="post-from-site">' .
 			$style .
 			$nonce .
@@ -260,5 +280,7 @@ class PostFromSite2 {
 		'</form>';
 	    return $form;
 	}
+	
+
 }
 $GLOBALS['pfs'] = new PostFromSite2();
