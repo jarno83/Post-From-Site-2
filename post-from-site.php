@@ -113,18 +113,6 @@ class PostFromSite2 {
 		echo "<p id='pfs'>".__("Some description about PFS",'pfs_domain')."</p>";
 	}
 
-	function setting_pfs_status() {
-		$options = $this->get_options();
-		?>
-		<select id='pfs_status' name='pfs_2_options[pfs_status]'>
-            <option<?php selected( $options['pfs_status'], 'publish' ); ?> value='publish'><?php _e('Published') ?></option>
-            <option<?php selected( $options['pfs_status'], 'private' ); ?> value='private'><?php _e('Privately Published') ?></option>
-            <option<?php selected( $options['pfs_status'], 'pending' ); ?> value='pending'><?php _e('Pending Review') ?></option>
-            <option<?php selected( $options['pfs_status'], 'draft' ); ?> value='draft'><?php _e('Draft') ?></option>
-        </select>
-        <?php 
-	}
-	
 	function setting_pfs_type() {
 		$options = $this->get_options();
 		$post_types = get_post_types(array('public'=>true, 'show_ui'=>true), 'object'); 
@@ -135,6 +123,21 @@ class PostFromSite2 {
             <?php } ?>
 	    </select>
 	    <?php
+	}
+	
+	function setting_pfs_status() {
+		$options = $this->get_options();
+		$post_statuses = get_post_stati( array( 'show_in_admin_all_list'=>true ), 'object' );
+		unset($post_statuses['future']);
+		$post_statuses['perpost'] = (object) array('name'=>'perpost','label'=>'Per Post');
+		?>
+		<select id='pfs_status' name='pfs_2_options[pfs_status]'>
+			<?php foreach ($post_statuses as $status ) { ?>
+			    <option<?php selected( $options['pfs_status'], $status->name ); ?> value="<?php echo $status->name; ?>"><?php echo $status->label; ?></option>
+			<?php } ?>
+	    </select>
+	    <label class="description" for="pfs_status"><?php _e( 'Per Post will let you decide per-post', 'pfs_domain' ); ?></label>
+	    <?php 
 	}
 	
 	function setting_pfs_comments() {
