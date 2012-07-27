@@ -80,10 +80,10 @@ class PostFromSite2 {
 		
 		add_settings_section( 'pfs2', 'Post From Site Settings', array($this, 'setting_section_pfs'), 'writing' );
 		
-		// Status
-		add_settings_field('pfs_status', '<label for="pfs_status">'.__('Post Status:' , 'pfs_domain' ).'</label>' , array(&$this, 'setting_pfs_status') , 'writing', 'pfs2' );
 		// Type
 		add_settings_field('pfs_type', '<label for="pfs_type">'.__('Post Type:' , 'pfs_domain' ).'</label>' , array(&$this, 'setting_pfs_type') , 'writing', 'pfs2' );
+		// Status
+		add_settings_field('pfs_status', '<label for="pfs_status">'.__('Post Status:' , 'pfs_domain' ).'</label>' , array(&$this, 'setting_pfs_status') , 'writing', 'pfs2' );
 		// Comments?
 		add_settings_field('pfs_comments', '<label for="pfs_comments">'.__('Comment Status:' , 'pfs_domain' ).'</label>' , array(&$this, 'setting_pfs_comments') , 'writing', 'pfs2' );
 		// Taxonomies
@@ -110,7 +110,7 @@ class PostFromSite2 {
 	}
 	
 	function setting_section_pfs(){
-		echo "<p>".__("Some description about PFS",'pfs_domain')."</p>";
+		echo "<p id='pfs'>".__("Some description about PFS",'pfs_domain')."</p>";
 	}
 
 	function setting_pfs_status() {
@@ -170,25 +170,29 @@ class PostFromSite2 {
 	    $valid_statuses = array( 'publish', 'private', 'pending', 'draft' );
 	    $valid_types = get_post_types( array( 'public'=>true, 'show_ui'=>true ), 'names' );
 	    $valid_comment = array( 'open', 'closed', 'perpage' );
-	    $valid_taxonomies = get_taxonomies( array( 'public'=>true, 'show_ui'=>true ), 'names' );
 
 	    // validate each option, filling out $output with correct vals.
 	    if ( isset( $input['pfs_status'] ) && in_array( $input['pfs_status'], $valid_statuses ) )
 	    	$output['pfs_status'] = $input['pfs_status']; 
+	    
 	    if ( isset( $input['pfs_type'] ) && in_array( $input['pfs_type'], $valid_types ) )
 	        $output['pfs_type'] = $input['pfs_type'];
+	    
 	    if ( isset( $input['pfs_comment'] ) && in_array( $input['pfs_comment'], $valid_comment ) )
 	        $output['pfs_comment'] = $input['pfs_comment'];
+	    
 	    if ( isset( $input['pfs_taxonomies'] ) ){
 	        $output['pfs_taxonomies'] = array();
+    	    $valid_taxonomies = get_taxonomies( array( 'public'=>true, 'show_ui'=>true, 'object_type'=>array($input['pfs_type']) ), 'names' );
+    	    //var_dump($valid_taxonomies);
 	        foreach ( $input['pfs_taxonomies'] as $t ) {
 	            if ( in_array( $t, $valid_taxonomies ) )
         	        $output['pfs_taxonomies'][] = $t;
         	}
         }
-	    
-	    
-	    return $output;
+        add_settings_error('pfs_taxonomies', 'pfs_taxonomies', print_r($input,true).print_r($output,true));
+        
+        return $output;
 	}
 	
 	function get_form() {
