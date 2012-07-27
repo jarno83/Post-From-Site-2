@@ -32,7 +32,7 @@ class PostFromSite2 {
     	add_shortcode( 'post-from-site', array($this, 'shortcode') );
     	
     	// add admin page & options
-    	add_filter( 'admin_init' , array( $this , 'register_fields' ) );
+    	add_filter( 'admin_init' , array( $this, 'register_fields' ) );
     	
     	// add wp ajax hook for handling submission
 
